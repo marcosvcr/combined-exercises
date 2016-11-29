@@ -10,15 +10,249 @@ So for our shapes, we want (at least) an interface that gives us two functions: 
 Implement this protocol/interface and the two functions for at least circles and rectangles; by all means, more shapes if you want to.
 
 ``` r
-## Your code and tests here
+### Classes
+Circle <- function(x)
+{
+
+  me <- list(
+    radius = x
+  )
+
+  ## Set the name for the class
+  class(me) <- append(class(me),"Circle")
+  return(me)
+}
+
+Square <- function(x)
+{
+  me <- list(
+    size_Side = x
+  )
+
+  ## Set the name for the class
+  class(me) <- append(class(me),"Square")
+  return(me)
+
+
+
+}
+
+
+
+###polymorphism functions
+
+circumference <- function(x)
+{
+  UseMethod("circumference", x)
+
+}
+
+circumference.default <- function(x)
+{
+  print("I do not know how to handle this object.")
+
+}
+
+circumference.Circle <- function(x)
+{
+  return(2*pi*x$radius)
+
+}
+
+circumference.Square <- function(x)
+{
+  print("Assuming a square inscribed on the circumference")
+  print("using the Pythagorean theorem, that the length of a diagonal is sqrt(2)*side and so what you are calling the 'radius' is half the diagonal")
+  r<- (sqrt(2)*x$size_Side)/2
+
+  circun <- 2*pi*r
+  print("the radius is")
+  print(r)
+  print("the circumference is")
+  print(circun)
+}
+
+
+area <- function(x)
+{
+  UseMethod("area", x)
+
+}
+
+area.default <- function(x)
+{
+  print("I do not know how to handle this object.")
+
+}
+
+
+area.Circle <- function(x)
+{
+  return(pi*x$radius^2)
+
+}
+
+
+
+area.Square <- function(x)
+{
+  return(x$size_Side^2)
+
+}
+
+
+
+##### tests
+
+b<- Square(2)
+c <- Circle(7)
+
+circumference(b)
 ```
+
+    ## [1] "Assuming a square inscribed on the circumference"
+    ## [1] "using the Pythagorean theorem, that the length of a diagonal is sqrt(2)*side and so what you are calling the 'radius' is half the diagonal"
+    ## [1] "the radius is"
+    ## [1] 1.414214
+    ## [1] "the circumference is"
+    ## [1] 8.885766
+
+``` r
+circumference(c)
+```
+
+    ## [1] 43.9823
+
+``` r
+area(b)
+```
+
+    ## [1] 4
+
+``` r
+area(c)
+```
+
+    ## [1] 153.938
 
 ### Polynomials
 
-Write a class that lets you represent polynomial objects. An *n*-degree polynomial is on the form *c*<sub>0</sub> + *c*<sub>1</sub> \* *x* + *c*<sub>2</sub> \* *x* \* *x* + ⋯ + *c*<sub>*n*</sub> \* *x* \* *x* \* ⋯ \* *x* and can be represented by the *n* + 1 coefficients (*c*<sub>0</sub>, *c*<sub>1</sub>, …, *c*<sub>*n*</sub>). Write the interface such that you can evaluate polynomials in any point *x*, i.e. with a function `evaluate_polynomial(poly, x)` that gives you the value of the polynomial at the point `x`.
+Write a class that lets you represent polynomial objects. An \(n\)-degree polynomial is on the form \(c_0 + c_1 * x + c_2 * x*x + \cdots + c_n * x * x * \cdots * x\) and can be represented by the \(n+1\) coefficients \((c_0, c_1, \ldots, c_n)\). Write the interface such that you can evaluate polynomials in any point \(x\), i.e. with a function `evaluate_polynomial(poly, x)` that gives you the value of the polynomial at the point `x`.
 
 The function `uniroot` (built into R) lets you find the roots of a general function. Use it to write a function that finds the roots of your polynomials. This function works by numerically finding the points where the polynomial is zero. For lines and quadratic polynomials, though, there are analytical solutions. Write special cases for such polynomials such that calling the root finding function on the special cases exploits that solutions are known there.
 
 ``` r
-## Your code and tests here
+Polynome <- function(expression)
+{
+
+  thisEnv <- environment()
+
+  me <- list(
+    formula = function(x) eval(parse(text=expression)),
+    thisEnv = thisEnv,
+
+    ## The Methods for this class normally go here but are discussed
+    ## below. A simple placeholder is here to give you a teaser....
+    getEnv = function()
+    {
+      return(get("thisEnv",thisEnv))
+    }
+
+
+  )
+
+
+  ## Set the name for the class
+  class(me) <- append(class(me),"Polynome")
+  return(me)
+}
+
+evaluate_polynomial <- function(obj, number)
+{
+  UseMethod("evaluate_polynomial", obj)
+
+}
+
+evaluate_polynomial.default <- function(obj, number)
+{
+  stop("I do not know how to handle this object.")
+
+}
+
+evaluate_polynomial.Polynome <- function(obj, number)
+{
+  return(obj$formula(number))
+
+}
+
+
+
+uniroot <- function(obj, lower=a, upper=b)
+{
+
+  UseMethod("uniroot", obj)
+
+}
+
+uniroot.Polynome <- function(obj, lower=a, upper=b)
+{
+
+  #bissec metthod
+
+  if((upper-lower)<10^-4){
+    raiz=lower
+  }
+  k=0
+
+  while((upper-lower)>10^-4){
+    M=obj$formula(lower)
+    x=(lower+upper)/2
+    if(M*obj$formula(x)>0){
+      lower = x
+    }else{
+      upper=x
+    }
+    k=k+1
+  }
+
+  print("root is approximately: ")
+  print(x)
+  print("number of iterations")
+  print(k)
+
+}
+
+
+### test
+
+a <- Polynome("3*x")
+b <- Polynome("4 + 3*x + 7*x^2 + 5*x^3")
+
+evaluate_polynomial(a, 3)
 ```
+
+    ## [1] 9
+
+``` r
+evaluate_polynomial(b,2)
+```
+
+    ## [1] 78
+
+``` r
+uniroot(b, lower=-7, upper=7)
+```
+
+    ## [1] "root is approximately: "
+    ## [1] -1.384117
+    ## [1] "number of iterations"
+    ## [1] 18
+
+``` r
+uniroot(a, lower=-3, upper=3)
+```
+
+    ## [1] "root is approximately: "
+    ## [1] -9.155273e-05
+    ## [1] "number of iterations"
+    ## [1] 16
